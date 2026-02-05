@@ -3,7 +3,7 @@
 ## Resources
 
 - [ChipVerify](https://www.chipverify.com/tutorials/verilog)
-  - We'll be following extensively chipverify for core content
+  - We'll be following extensively chipverify for core content (Chapter 1-13)
 - [hdlbits](https://hdlbits.01xz.net/wiki/Problem_sets#Getting_Started)
   - We'll be using hdlbits for exercises and practice
 

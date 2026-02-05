@@ -143,6 +143,22 @@ We'll be using Icarus Verilog `iverilog` and `gtkwave`
 sudo apt install iverilog gtkwave -y
 ```
 
+VSCode settings:
+```json
+  //HDL stuff
+  "[verilog]": {
+    "editor.defaultFormatter": "mshr-h.VerilogHDL",
+    "editor.formatOnSave": true,
+  },
+  "[systemverilog]": {
+    "editor.defaultFormatter": "mshr-h.VerilogHDL",
+    "editor.formatOnSave": true,
+  },
+  // Configure the formatter for hdl, please install verible.
+  // I installed the binaries here
+  "verilog.formatting.verilogHDL.formatter": "verible-verilog-format",
+```
+
 **Option 1: Separate Files**
 
 Our design is stored in [`design.v`](dff/design.v) while the testbench implementation is in [`tb.v`](dff/tb.v)

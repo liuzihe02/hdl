@@ -19,13 +19,10 @@ Behavioral requirements that define how hardware should operate. Example for a D
 #### Verification
 Process of checking if Verilog code matches intended behavior. Primary method: **circuit simulation** using EDA (Electronic Design Automation) tools. Design RTL is placed in a **testbench** that provides stimuli and checks outputs.
 
----
-
 ### Verilog Code Structure
 
 All code lives between `module` and `endmodule` keywords.
 
-#### Template
 ```verilog
 module [design_name] ( [port_list] );
     [list_of_input_ports]
@@ -36,14 +33,81 @@ module [design_name] ( [port_list] );
 endmodule
 ```
 
-#### Section Breakdown
-| Section | Purpose |
-|---------|---------|
-| Module definition | Name and port list |
-| Input/Output ports | Interface signals |
-| Signal declarations | Internal wires/regs |
-| Module instantiations | Sub-module instances |
-| Behavioral code | Logic description (`always`, `assign`, etc.) |
+- Module Definition
+  - module name, alphanumeric and can contain `_`
+- Input/Output
+  - Interface signals
+- Signal declaration
+  - Internal wires and regs
+- Module instantiations
+
+#### Data Types
+
+Mainly `reg` and `wire`.
+
+A reg datatype is used to hold onto values like a variable.
+
+A wire is just analogous to an electrical wire, that has to be driven continuously (updated instantly).
+
+#### Assignments
+
+Verilog has three basic blocks:
+
+| Block | Description |
+|-------|-------------|
+| `always @(condition)` | always executed when the condition is satisfied |
+| `initial` | will be executed only once, when the simulation begins |
+| `assign [LHS] = [RHS]` | Value of LHS will be updated *whenever RHS changes* |
+
+
+* `reg` can be assigned to only in `initial` and `always` blocks
+* `wire` can be assigned a value only via `assign` statement
+* If there are multiple statements in an **initial/always** block, they should be wrapped in `begin .. end`
+
+```verilog
+module testbench;
+    
+    // Signals d, rst_b, and clk are declared outside initial blog
+    // assigned within an initial block, because they are of type `reg`
+    reg d;
+    reg rst_b;
+    reg clk;
+    
+    wire q;
+    
+    //Since there are multiple lines for `initial` block, **begin** and **end** are used
+    initial begin
+        d = 0;
+        rst_b = 0;
+        clk = 0;
+        
+        #100 $finish;
+    end
+    
+    always begin
+        #10 clk = ~clk;
+    end
+endmodule
+```
+
+* Code inside the initial block will be executed at 0ns i.e. start of simulation
+* Since there's no condition for the `always` block, it will run like an infinite loop in C
+* **#** is used to represent time delay. `#10` tells the simulator to advance simulation time by 10 units.
+* `clk = ~clk;` will toggle the value of clock, and because **#10** is put before the statement, clock will be toggled after every 10 time units.
+* `$finish` is the way to end a simulation. In this case, it will run for 100 time units and exit.
+
+
+#### Quick Reference
+
+| Keyword | Usage |
+|---------|-------|
+| `module`/`endmodule` | Define a hardware block |
+| `input`/`output` | Port directions |
+| `reg` | Variable storage (sequential) |
+| `wire` | Continuous connection (combinational) |
+| `always @()` | Procedural block thats executed based on some condition |
+| `initial` | Simulation-only initialization |
+| `posedge`/`negedge` | Clock edge triggers |
 
 ---
 
@@ -73,7 +137,6 @@ endmodule
 - `always @ (posedge clk)` triggers on rising clock edge
 - `<=` is non-blocking assignment (standard for sequential logic)
 
----
 
 ### Testbench Structure
 
@@ -102,24 +165,13 @@ module tb;
 endmodule
 ```
 
-**Key points:**
 - Testbench has no ports (top-level container)
 - Uses `reg` for inputs (driven by TB), `wire` for outputs (driven by DUT)
 - `.port_name(signal)` syntax for named port connections
 - `initial` block runs once at simulation start
 - `1'b0` = 1-bit binary value 0
 
-### Quick Reference
 
-| Keyword | Usage |
-|---------|-------|
-| `module`/`endmodule` | Define a hardware block |
-| `input`/`output` | Port directions |
-| `reg` | Variable storage (sequential) |
-| `wire` | Continuous connection (combinational) |
-| `always @()` | Procedural block with sensitivity list |
-| `initial` | Simulation-only initialization |
-| `posedge`/`negedge` | Clock edge triggers |
 
 ## Hello World
 
@@ -130,6 +182,8 @@ Minimal runnable Verilog example:
 // top level module with no ports (testbench style)
 module tb;
     //execute once at simulation test time 0
+    // Initial block is another construct typically used
+    // to initialize signal nets and variables for simulation
     initial
         // system task to print, for simulation or debug only
         $display("Hello World!");

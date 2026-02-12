@@ -64,7 +64,6 @@ Negative numbers are specified by placing a minus `-` sign before the size of a 
 
 ## Verilog Modules
 
-### Core Concept
 A **module** is a block of Verilog code that implements a specific functionality. Modules are the fundamental building blocks in Verilog - they can be embedded within other modules, and higher-level modules communicate with lower-level modules using input/output ports.
 
 ### Syntax
@@ -79,11 +78,9 @@ module name;
 endmodule
 ```
 
-**Key Rules:**
 - Must be enclosed within `module` and `endmodule` keywords
 - Ports declared in port list cannot be redeclared in module body
 - All declarations, dataflow statements, functions, tasks, and sub-module instances must be inside module/endmodule
-- Multiple modules can exist in the same file in any order
 
 ### Example: D Flip-Flop
 
@@ -133,6 +130,8 @@ module shift_reg (
     wire [2:0] q_net;
     
     // Instantiate 4 D flip-flops
+    // name function arguments and inputs, basically saying funcation_arg=actual_value
+    // .function_arg(actual_value)
     dff u0 (.d(d),         .clk(clk), .rstn(rstn), .q(q_net[0]));
     dff u1 (.d(q_net[0]),  .clk(clk), .rstn(rstn), .q(q_net[1]));
     dff u2 (.d(q_net[1]),  .clk(clk), .rstn(rstn), .q(q_net[2]));
@@ -151,9 +150,7 @@ d ──┤DFF├──┤DFF├──┤DFF├──┤DFF├── q
 
 ### Top-Level Modules
 
-A **top-level module** contains all other modules and is not instantiated anywhere.
-
-**Design Example:**
+A **top-level module** contains all other modules and is not instantiated anywhere, usually using the `design` keyword
 ```verilog
 // Sub-modules
 module mod3 ([port_list]);
@@ -190,6 +187,8 @@ endmodule
 ```
 
 ### Hierarchical Names
+
+> Hierarchical access is not *synthesizable*, and is only used in testing or verification to debug stuff etc
 
 Signals can be accessed using dot notation through the module hierarchy:
 

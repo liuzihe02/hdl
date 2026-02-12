@@ -188,7 +188,7 @@ endmodule
 
 ### Hierarchical Names
 
-> Hierarchical access is not *synthesizable*, and is only used in testing or verification to debug stuff etc
+> Hierarchical access stuff are not *synthesizable*, and is only used in testing or verification to debug stuff etc
 
 Signals can be accessed using dot notation through the module hierarchy:
 
@@ -211,3 +211,254 @@ testbench (root)
             ├── mod_inst1 (mod4)
             └── mod_inst2 (mod4)
 ```
+
+## Verilog Ports
+
+Ports are the interface signals for a module. They act as the "pins" of a hardware module - the only way to send and receive data. Module as a physical chip on a PCB - ports are the chip's pins.
+
+
+### Port Types
+
+| Type | Direction | Description | Default Type | Can Override to `reg` |
+|------|-----------|-------------|--------------|----------------------|
+| `input` | IN | Module receives values from outside | `wire` | No (always wire) |
+| `output` | OUT | Module sends values to outside | `wire` | Yes |
+| `inout` | BIDIRECTIONAL | Module can both send and receive | `wire` | No (must be wire) |
+
+**Default:** Ports are considered `wire` type by default - no `reg`!
+
+### Syntax
+
+```verilog
+input  [net_type] [range] list_of_names;    // Input port
+output [net_type] [range] list_of_names;    // Output port (wire)
+output [var_type] [range] list_of_names;    // Output port (variable)
+inout  [net_type] [range] list_of_names;    // Bidirectional port
+```
+
+### Example
+
+```verilog
+module my_design (
+    input wire        clk,      // Clock input
+    input             en,       // Enable (implicitly wire)
+    input             rw,       // Read/Write
+    inout [15:0]      data,     // Bidirectional data bus
+    output            int       // Interrupt output
+);
+    
+    // Design behavior
+    
+endmodule
+```
+
+- Port names must be unique within a module
+- Cannot declare the same port name multiple times
+
+### Signed Ports
+
+The `signed` attribute can be applied to ports for signed arithmetic operations.
+
+```verilog
+module design1 (
+    input      a, b,    // Unsigned by default
+    output     c
+);
+    // a, b, c are unsigned
+endmodule
+
+module design2 (
+    input signed  a, b,    // Explicitly signed
+    output        c
+);
+    wire a, b;            // a, b inherit signed attribute from port
+    reg signed c;         // c is signed from reg declaration
+endmodule
+```
+
+**Rule:** If either the port or net/reg declaration is signed, both are considered signed.
+
+### Port Declaration Styles
+
+Port directions declared inline (recommended):
+
+```verilog
+module test (
+    input  [7:0] a,
+    input  [7:0] b,        // b is also 8-bit input
+    output [7:0] c
+);
+    // Design content
+endmodule
+
+module test2 (
+    input wire  [7:0] a,   // Explicit wire type
+    input wire  [7:0] b,
+    output reg  [7:0] c    // Explicit reg type
+);
+    // Design content
+endmodule
+```
+
+### Port Declaration Rules (Verilog-2001)
+
+**Complete Declaration:**
+If port includes net/variable type, it's completely declared - cannot redeclare.
+
+```verilog
+module test (
+    input      [7:0] a,       // Implicitly wire (incomplete)
+    output reg [7:0] e        // Explicitly reg (complete)
+);
+    
+    wire signed [7:0] a;      // ILLEGAL - simulator dependent, some simulators allow some don't
+    wire        [7:0] e;      // ILLEGAL - e already complete
+    
+endmodule
+```
+
+**Incomplete Declaration:**
+If port doesn't include net/variable type, it can be declared later.
+
+```verilog
+module test (
+    input  [7:0] a,           // Incomplete (no wire/reg specified)
+    output [7:0] e            // Incomplete
+);
+    
+    reg [7:0] e;              // LEGAL - e was not fully declared
+    
+endmodule
+```
+
+## Verilog Module Instantiations
+
+When instantiating a module, its ports must be connected to signals in the parent module. This can be done in two ways: **by ordered list** or **by name**.
+
+### Method 1: Ordered List (Positional)
+
+Ports are connected based on their position in the port list.
+
+```verilog
+// Design module
+module mydesign (
+    input  x, y, z,    // Position 1, 2, 3
+    output o           // Position 4
+);
+    // Module contents
+endmodule
+
+// Parent module - ordered connection
+module tb_top;
+    wire [1:0] a;
+    wire       b, c;
+    
+    // Connections by position
+    mydesign d0 (a[0], b, a[1], c);
+    //           pos1  pos2 pos3  pos4
+    //            ↓     ↓    ↓    ↓
+    //            x     y    z    o
+endmodule
+```
+
+**Drawbacks:**
+- Must know exact port order
+- Error-prone if port order changes
+- Difficult to debug with many ports
+
+### Method 2: Named Connection (Recommended)
+
+Explicitly connect ports using their names with dot notation.
+
+```verilog
+module design_top;
+    wire [1:0] a;
+    wire       b, c;
+    
+    // Named connections (order irrelevant)
+    mydesign d0 (
+        .x (a[0]),    // Design port .x connects to signal a[0]
+        .y (b),       // Design port .y connects to signal b
+        .z (a[1]),    // Design port .z connects to signal a[1]
+        .o (c)        // Design port .o connects to signal c
+    );
+endmodule
+```
+
+**Syntax:** `.port_name (signal_name)`
+- `.port_name` = port in the instantiated module
+- `signal_name` = signal in parent module
+
+**Advantages:**
+- Order-independent
+- Self-documenting
+- Easy to debug (one port per line)
+- Safe when ports are added/removed
+
+**Rules:**
+- Each port can only be connected once
+- Connection order doesn't matter
+
+
+### Unconnected/Floating Ports
+
+Ports can be left unconnected - they will have high-impedance (Z) value.
+
+```verilog
+module design_top;
+    wire [1:0] a;
+    wire       c;
+    
+    mydesign d0 (
+        // .x not connected → x will be Z
+        .y (a[1]),
+        .z (a[1]),
+        .o ()          // o left floating → not connected to c
+    );
+endmodule
+```
+
+### Port Type Rules
+
+```verilog
+// VALID: inputs are implicitly wire
+module des0 (input wire clk);    // Explicit wire (redundant)
+module des0 (input clk);         // Implicit wire (preferred)
+
+// INVALID: inputs cannot be reg
+module des1 (input reg clk);     // ERROR: inputs cannot be reg
+
+// VALID: outputs that store values must be reg
+module des2 (output reg [3:0] data);
+
+// Port width mismatch
+module des2 (output [3:0] data);  // 4-bit output
+module des3 (input  [7:0] data);  // 8-bit input
+
+module top;
+    wire [7:0] net;
+    des2 u0 (.data(net));         // Upper 4 bits of net are undriven
+    des3 u1 (.data(net));         // Works, but u0 only drives [3:0]
+endmodule
+```
+
+### Key Port Rules Summary
+
+| Port Type | Can be `wire`? | Can be `reg`? | Usage |
+|-----------|---------------|---------------|-------|
+| `input` | Yes (default) | **NO** | Must be driven externally |
+| `output` | Yes | Yes (if storing) | Can drive external signals |
+| `inout` | Yes | **NO** | Bidirectional, must be driven |
+
+**Important:**
+- `input` and `inout` cannot be `reg` (continuously driven from outside)
+- `output` can be `reg` when used in procedural blocks (`always`, `initial`)
+- Port width mismatches: smaller width prevails, extra bits ignored
+
+### Best Practices
+
+1. **Always use named connections** for clarity and maintainability
+2. **One port per line** for easy debugging
+3. **Declare output as `reg`** when storing values in procedural blocks
+4. **Be careful with width mismatches** - can cause subtle bugs
+5. **Leave ports unconnected explicitly** with `()` to show intent

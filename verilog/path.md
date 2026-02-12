@@ -20,3 +20,91 @@ These are extra resources that weren't used but are here for reference
 - UC Davis Notes
   - downloaded locally
 - Verilog Quick Reference
+
+## ChipVerify Path
+
+I'll fetch the tutorial site to see the full chapter structure.Based on your course requirements (FPGA experiment, FSM design, sequential/combinational circuits) and 10-15 hour timeframe, here's the breakdown:
+
+### **TIER 1: ABSOLUTELY CORE (6-8 hours)**
+*Essential for course and FPGA lab*
+
+**Getting Started (1-2h)**
+- Introduction, Hello World, Quick Review
+
+**Basic Syntax & Structure (1h)**
+- Verilog Syntax, module, Ports, Module Instantiations
+
+**Data Types & Operators (1h)**
+- Data Types, scalar/vector, Net Types, Operators, Concatenation
+
+**Procedural Blocks (1h)**
+- initial block, always block, Control Blocks
+
+**Assignments (1h)** ⚠️ **CRITICAL**
+- assign statement, **Blocking & Non-Blocking** (most common mistake!)
+
+**Combinational & Sequential Logic (1h)**
+- Combinational Logic (assign & always)
+- Sequential Logic (always)
+
+**Conditional Statements (0.5h)**
+- if-else-if, case statement
+
+**State Machines (1h)** ⚠️ **HIGH PRIORITY**
+- Verilog FSM, Sequence Detector
+
+**Testbench & Simulation (1h)**
+- Testbench, Simulation, Display Tasks
+
+---
+
+### **TIER 2: HIGHLY RELEVANT (3-4 hours)**
+*Important for lab and understanding*
+
+**Flip-Flops & Latches (0.5h)**
+- D Latch, D Flip-Flop Async Reset, T/JK Flip-Flops
+
+**Basic Digital Circuits (0.5h)**
+- Full Adder, Mux, Priority Encoder
+
+**Counters (0.5h)**
+- 4-bit counter, Mod-N counter
+
+**Arrays & Parameters (0.5h)**
+- Arrays/Memories, Parameters (for parameterized designs)
+
+**Clock & Timing (0.5h)**
+- Clock Generator, Timescale
+
+**Loops & Generate (0.5h)**
+- for Loop, generate block
+
+---
+
+### **TIER 3: USEFUL BUT OPTIONAL (1-2 hours)**
+*If you have extra time*
+
+- Shift Registers
+- Memory Elements
+- Gate Level Modeling
+- Examples & Practice
+
+---
+
+### **TIER 4: SKIP FOR NOW**
+*Too advanced or covered in lectures*
+
+- Timing & Delays (detailed)
+- Advanced Testbench Features (VCD, File IO)
+- Compiler Directives
+- Advanced Topics (UDP, Specify Block, Strength)
+- Synthesis (you'll cover this in lectures)
+- SDF/Timing Analysis
+- Interview Questions
+
+### Code Simple Examples
+
+Simple combinational (mux, adder)
+D flip-flop
+Counter
+Simple FSM

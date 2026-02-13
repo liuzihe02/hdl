@@ -104,10 +104,23 @@ I'll fetch the tutorial site to see the full chapter structure.Based on your cou
 
 ### Code Simple Examples
 
-Simple combinational (mux, adder)
-D flip-flop
-Counter
-Simple FSM
+**Combinational**
+
+- Half adder, full adder, ripple adder → foundation of all arithmetic
+- Mux (2:1, 4:1) → LUTs are literally muxes, so this IS the FPGA
+- Encoders / Decoders / Priority Encoders — essential combinational logic for address decoding, arbitration.
+
+**Sequential**
+
+- D flip-flop (sync reset, async reset) → the single most important sequential element
+- Counters (binary, mod-N) → backbone of timing and control
+- Shift register → serial-to-parallel, LFSRs, data movement
+
+**Control**
+
+- FSM (Moore and Mealy) → the glue that ties datapath to control; if you can write an FSM cleanly you can build almost anything
+
+That's roughly 12 circuit types. Everything else in those lists is either a variation (JK/T flip-flops are derived from D), a composition (ALU = adders + mux + logic), or a niche application (FIFO, debounce, edge detector).
 
 ### Chip Design Diagrams
 

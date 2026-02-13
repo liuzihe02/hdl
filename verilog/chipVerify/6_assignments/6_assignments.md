@@ -1,37 +1,112 @@
 # Chip Verify Verilog Chapter 6: Assignments
 
-**Assignments** place values onto nets and variables. Verilog has three basic forms of assignments, each with distinct behaviors and use cases.
+**Assignments** place values onto nets and variables. Verilog has various assignment types (continuous, procedural blocking and procedural non-blocking)
 
-## Assignment Types Overview
+> Note there's also procedural continuous assignment, but we don't discuss this as its rarely used and not synthesizable
 
-| Type | Operator | Target | Location | Synthesizable | Execution |
-|------|----------|--------|----------|---------------|-----------|
-| **Procedural** | `=` or `<=` | Variables (reg) | initial/always/task/function | Depends on context | Sequential |
-| **Continuous** | `assign` | Nets (wire) | Outside procedural blocks | ✓ Yes | Concurrent |
+## The Big Picture
 
+But first we review some concepts.
+
+### Two Kinds of Hardware Logic
+
+- **Combinational logic** = output depends ONLY on current inputs (no memory). Examples: gates, muxes, ALUs. These respond **asynchronously** — the output changes immediately whenever an input changes. No clock involved.
+
+- **Sequential logic** = output depends on current inputs AND past state (has memory). Examples: flip-flops, registers, state machines. These operate **synchronously** — the output only changes on a clock edge.
+
+> **Combinational = Asynchronous** and **Sequential = Synchronous** are the same distinction, just described from different angles. "Combinational/sequential" emphasizes *what* the logic does (memory or not). "Async/sync" emphasizes *when* the output changes (immediately vs. on clock edge).
+
+### Two Verilog Data Types
+
+- **Nets (`wire`)** — model physical connections/wires. Must be continuously driven (like a real wire connected to a battery). Cannot store values.
+- **Variables (`reg`)** — model storage in simulation. Hold their value until reassigned. 
+
+> Despite the name, `reg` does NOT necessarily synthesize to a register — it can model combinational OR sequential logic depending on how you use it.
+
+### Two Syntax Locations
+
+- **Continuous assignment (`assign`)** — written outside procedural blocks. Drives `wire` types. Always models combinational logic.
+- **Procedural assignment (`=` or `<=`)** — written inside procedural blocks (`always`, `initial`, `task`, `function`). Drives `reg` types. Can model EITHER combinational or sequential logic, depending on which operator you use.
+
+### Two Procedural Operators
+
+These are only used within procedural blocks.
+
+- **Blocking (`=`)** — executes sequentially: each statement completes before the next begins. Used for **combinational** logic.
+- **Non-blocking (`<=`)** — schedules all assignments simultaneously: all RHS values captured first, all LHS updated at end of time-step. Used for **sequential** logic (flip-flops).
+
+> "Blocking" and "non-blocking" describe **simulation execution order**, not hardware logic. Confusingly, the mapping is **opposite** to what the names suggest:
+> - **Blocking** `=` (sequential *simulation* execution) → models **combinational/async** hardware
+> - **Non-blocking** `<=` (concurrent *simulation* execution) → models **sequential/sync** hardware
+>
+> Why? Because flip-flops all capture their inputs and update *simultaneously* at the clock edge — that's exactly what `<=` does in simulation.
+
+```verilog
+// ASYNCHRONOUS Logic (no clock) - uses BLOCKING =
+always @(*) begin              // Triggers on ANY input change
+    sum = a + b;               // Changes IMMEDIATELY when a or b changes
+    product = sum * c;         // No clock involved!
+end
+// This is COMBINATIONAL (asynchronous gates)
+
+// SYNCHRONOUS Logic (clocked) - uses NON-BLOCKING <=
+always @(posedge clk) begin    // Triggers ONLY on clock edge
+    q <= d;                    // Changes ONLY at clock rising edge
+end
+// This is SEQUENTIAL (synchronous flip-flops)
+```
+
+### 3 Assignment Patterns
+
+Everything collapses into just three synthesizable patterns:
+
+```
+PATTERN 1: Combinational logic with assign (wire)
+─────────────────────────────────────────────────
+    wire [7:0] result;
+    assign result = a + b;        // Updates immediately whenever a or b changes
+
+PATTERN 2: Combinational logic with always (reg)
+─────────────────────────────────────────────────
+    reg [7:0] temp;
+    always @(*) begin             // Trigger on ANY input change (async)
+        temp = a + b;             // Blocking = sequential execution in sim
+    end                           //   → synthesizes to combinational gates
+
+PATTERN 3: Sequential logic with always (reg)
+─────────────────────────────────────────────────
+    reg [7:0] q;
+    always @(posedge clk) begin   // Trigger ONLY on clock edge (sync)
+        q <= d;                   // Non-blocking = simultaneous update in sim
+    end                           //   → synthesizes to flip-flop
+```
+
+|Assignment Type | Hardware Behaviour | Data Type | Syntax | Operator | Sensitivity |
+|---|---|---|---|---|---|
+|**Continuous**| Combinational (async) | Nets - `wire` | `assign` | (implicit) | Auto (any RHS change) |
+|**Procedural (Blocking)**| Combinational (async) | Variables - `reg` | `always` block | `=` (blocking) | `always @(*)` |
+|**Procedural (Non-blocking)**| Sequential (sync) | Variables - `reg` | `always` block | `<=` (non-blocking) | `always @(posedge clk)` |
 
 ## Legal LHS Values
 
-What can appear on the left-hand side varies by assignment type:
-
 | Assignment Type | Allowed LHS |
-|----------------|-------------|
-| **Procedural** | reg variables (scalar/vector), bit/part-select of reg, memory word, concatenation **(no nets)** |
-| **Continuous** | wire nets (scalar/vector), bit/part-select of wire, concatenation of nets **(no variables)** |
+|---|---|
+| **Continuous** (`assign`) | wire nets (scalar/vector), bit/part-select of wire, concatenation of nets. **No variables.** |
+| **Procedural** (`=` / `<=`) | reg variables (scalar/vector), bit/part-select of reg, memory word, concatenation of regs. **No nets.** |
 
-**Golden Rule:** RHS can be any expression, but LHS restrictions depend on assignment type.
+**Golden Rule:** RHS can be any expression. LHS is restricted by assignment type.
 
 ```verilog
 module assignments_demo;
     reg [7:0] a, b;
     wire [7:0] x, y;
-    
+
     // LEGAL
-    always @(*) a = b + 1;           // Procedural: reg on LHS
-    assign x = y & 8'hFF;            // Continuous: wire on LHS
-    
+    always @(*) a = b + 1;           // Procedural: reg on LHS ✓
+    assign x = y & 8'hFF;            // Continuous: wire on LHS ✓
+
     // ILLEGAL
-    // assign a = b + 1;             // ERROR: Can't assign to reg
+    // assign a = b + 1;             // ERROR: Can't continuously assign to reg
     // always @(*) x = y & 8'hFF;    // ERROR: Can't procedurally assign to wire
 endmodule
 ```
@@ -40,7 +115,9 @@ endmodule
 
 ## 1. Continuous Assignment (`assign`)
 
-Continuous assignments drive **wire** nets and update whenever RHS changes. Used for **combinational logic** modeling.
+- Drives **wire** nets continuously - updates whenever RHS changes  
+- Hardware Behaviour: Combinational logic ONLY (gates, muxes, etc.)  
+- Syntax/Location: Outside procedural blocks
 
 ### Syntax
 
@@ -107,192 +184,102 @@ assign {a, b} = {x, y};    // LHS can be concatenation too
 
 **Key Point:** Undriven bits result in high-impedance (Z).
 
----
-
 ## 2. Procedural Assignments
 
-Occur within **procedural blocks** (initial, always, task, function). Assign to **variables** (reg, integer, real).
+- Drives **Variables** (reg, integer, real)
+- Hardware Behaviour: Can model **EITHER** combinational OR sequential logic depending on operator used
+- Location/Syntax: Occur within **procedural blocks** (initial, always, task, function)  
 
 ### Variable Declaration Assignment
 
-Initialize at declaration:
-
 ```verilog
-reg [31:0] data = 32'hdead_cafe;  // Initial value
+reg [31:0] data = 32'hdead_cafe;  // Initial value at declaration
 
 // Equivalent to:
 reg [31:0] data;
 initial data = 32'hdead_cafe;
 ```
 
-**Warning:** If initialized both at declaration AND in initial block at time 0, evaluation order is undefined.
+**Warning:** If initialized both at declaration AND in `initial` block at time 0, order is undefined (race condition):
 
 ```verilog
 reg [7:0] addr = 8'h05;
-initial addr = 8'hee;  // Race condition! Final value = 05 or EE?
+initial addr = 8'hee;  // Final value = 05 or EE? Undefined!
 ```
 
-### Blocking Assignment (`=`)
+### 2a. Blocking Assignment (`=`) — For Combinational Logic
 
-Executes **sequentially** - each statement completes before the next begins.
+Each statement **completes before** the next begins. Values are immediately visible to subsequent statements.
 
 ```verilog
+// All at time 0, but executed in order
 initial begin
-    a = 8'hDA;         // Execute immediately
-    b = 8'hF1;         // Execute after a completes
-    c = 8'h30;         // Execute after b completes
+    a = 8'hDA;                     // a updates first
+    $display("a=%h", a);           // Prints: a=DA (a already has new value)
+    b = 8'hF1;                     // b updates after a updates
+    c = 8'h30;                     // c updates after b updates
 end
 ```
 
-**Execution Flow:**
-```
-Time 0: a = 0xDA  (completes)
-Time 0: b = 0xF1  (completes)
-Time 0: c = 0x30  (completes)
-```
-
-**With Delays:**
+With delays:
 ```verilog
 initial begin
     a = 8'hDA;         // t=0
-    #10 b = 8'hF1;     // t=10 (wait 10 units)
-    #5  c = 8'h30;     // t=15 (wait 5 more units)
+    #10 b = 8'hF1;     // t=10 (wait 10, then assign)
+    #5  c = 8'h30;     // t=15 (wait 5 more, then assign)
 end
 ```
 
-### Non-Blocking Assignment (`<=`)
+**Why this models combinational logic:** In `always @(*)`, blocking `=` means each intermediate result is immediately available to the next line. Any code afterwards must use the updated values
 
-Schedules assignments **without blocking** - all RHS evaluated first, then LHS updated at end of time-step.
+```verilog
+always @(*) begin
+    a = 1;         // Completes immediately
+    b = a;         // Uses NEW a (=1)
+    c = b;         // Uses NEW b (=1)
+end
+// Result: a=1, b=1, c=1 — like a chain of wires, no pipeline
+```
+
+### 2b. Non-Blocking Assignment (`<=`) — For Sequential Logic
+
+All RHS values **captured first**, then all LHS **updated simultaneously** at end of time-step. No statement blocks the next.
 
 ```verilog
 initial begin
-    a <= 8'hDA;        // Schedule: evaluate RHS now, assign later
-    b <= 8'hF1;        // Schedule: evaluate RHS now, assign later
-    c <= 8'h30;        // Schedule: evaluate RHS now, assign later
+    a <= 8'hDA;                    // Schedule: capture RHS, don't assign yet
+    $display("a=%h", a);           // Prints: a=XX (a NOT yet updated!)
+    b <= 8'hF1;                    // Schedule: capture RHS
+    c <= 8'h30;                    // Schedule: capture RHS
 end
-// All assignments happen simultaneously at end of time-step
+// End of time-step: a=DA, b=F1, c=30 all update at once
 ```
 
-**Execution Flow:**
-```
-Time 0: Capture RHS values (8'hDA, 8'hF1, 8'h30)
-Time 0: Execute all other statements
-Time 0 (end): Assign captured values to a, b, c
-```
-
-**Critical Difference:**
+**Why this models sequential logic (flip-flops):** Real flip-flops all sample their D-input at the clock edge and update Q simultaneously. `<=` replicates this — all RHS values are read (sampled) using the OLD state, then all LHS values update at once.
 
 ```verilog
-// Example 1: Blocking
-initial begin
-    a = 8'hDA;
-    $display("a=%h", a);  // Prints: a=DA (a already updated)
+always @(posedge clk) begin
+    a <= 1;        // Captures RHS (=1), doesn't update a yet
+    b <= a;        // Uses OLD a (not 1!), doesn't update b yet
+    c <= b;        // Uses OLD b, doesn't update c yet
 end
-
-// Example 2: Non-Blocking  
-initial begin
-    a <= 8'hDA;
-    $display("a=%h", a);  // Prints: a=XX (a not yet updated)
-end
-// After end of time-step, a = DA
+// End of time-step: all update simultaneously
+// Result: shift register! a→b→c pipeline, each value shifts one stage per clock
 ```
 
 ### Blocking vs Non-Blocking Summary
 
-| Feature | Blocking `=` | Non-Blocking `<=` |
-|---------|-------------|-------------------|
-| **Execution** | Sequential (one-by-one) | Concurrent (scheduled) |
-| **Update Timing** | Immediate | End of time-step |
-| **Use Case** | Combinational logic in always | Sequential logic (flip-flops) |
-| **Synthesis** | Combo (if `always @(*)`) | Sequential (if `always @(posedge clk)`) |
-| **Simulation** | Deterministic within block | Order-independent |
+| | Blocking `=` | Non-Blocking `<=` |
+|---|---|---|
+| **Simulation execution** | Sequential (one-by-one) | Concurrent (all at end of time-step) |
+| **Value visibility** | Immediate — next line sees new value | Deferred — next line sees OLD value |
+| **Models what hardware** | Combinational (in `always @(*)`) | Sequential flip-flops (in `always @(posedge clk)`) |
+| **Why it works** | Gate outputs propagate immediately | Flip-flops sample and update simultaneously |
 
-
-## When to Use Each Type
-
-### Use Continuous Assignment (`assign`) when:
-- Modeling **combinational logic**
-- Driving **wire** nets
-- Outside procedural blocks
-- Need concurrent behavior
-
-```verilog
-// Good: Combinational logic
-assign out = (sel) ? a : b;
-assign ready = (count == 10);
-```
-
-### Use Blocking (`=`) when:
-- **Combinational logic** in always block
-- Order matters (sequential evaluation needed)
-- Testbench stimulus generation
-- Temporary variables in loops
-
-```verilog
-// Good: Combinational in always
-always @(*) begin
-    temp = a + b;      // Blocking: temp used immediately
-    out = temp & c;    // Blocking: needs temp value
-end
-```
-
-### Use Non-Blocking (`<=`) when:
-- **Sequential logic** (flip-flops, registers)
-- Always blocks with clock edges
-- State machines
-- Pipeline stages
-
-```verilog
-// Good: Sequential logic
-always @(posedge clk) begin
-    if (rst)
-        q <= 0;
-    else
-        q <= d;  // Non-blocking for flip-flop
-end
-```
-
-## Quick Reference
-
-| Context | Use | Avoid |
-|---------|-----|-------|
-| **Combinational outside always** | `assign` | Procedural assignment |
-| **Combinational in always** | Blocking `=` with `always @(*)` | Non-blocking `<=` |
-| **Sequential (flip-flops)** | Non-blocking `<=` with `always @(posedge clk)` | Blocking `=` |
-| **Testbench stimulus** | Blocking `=` or non-blocking `<=` | Either works, be consistent |
-| **Variables** | Procedural assignments | `assign` |
-| **Nets** | `assign` | Procedural assignments |
+## Tips
 
 1. **Never** use `assign` on `reg` variables
-2. **Always** use `<=` for sequential logic (flip-flops)
-3. **Always** use `=` for combinational logic in always blocks
-4. **Never** mix `=` and `<=` in same always block
-5. **Always** provide complete assignments to avoid latches
-
-```verilog
-// CONTINUOUS ASSIGNMENT (for wires)
-wire [7:0] result;
-assign result = a + b;  // Concurrent, always active
-
-// PROCEDURAL BLOCKING (for regs - combinational)
-reg [7:0] temp;
-always @(*) begin
-    temp = a + b;       // Sequential execution
-end
-
-// PROCEDURAL NON-BLOCKING (for regs - sequential)
-reg [7:0] q;
-always @(posedge clk) begin
-    q <= d;             // Scheduled assignment
-end
-
-// DECLARATION ASSIGNMENTS
-wire [3:0] w = 4'b0;    // Implicit continuous
-reg  [3:0] r = 4'b0;    // Initial value
-
-// PROCEDURAL CONTINUOUS (testbench only)
-initial begin
-    assign r = 0;       // Override
-    #10 deassign r;     // Release
-end
-```
+2. **Always** use `<=` for sequential logic (flip-flops) in `always @(posedge clk)`
+3. **Always** use `=` for combinational logic in `always @(*)`
+4. **Never** mix `=` and `<=` in the same `always` block
+5. **Always** assign all outputs in combinational blocks to avoid inferring latches

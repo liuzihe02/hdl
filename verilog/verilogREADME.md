@@ -108,3 +108,7 @@ Simple combinational (mux, adder)
 D flip-flop
 Counter
 Simple FSM
+
+### Chip Design Diagrams
+
+We'll be using `yosys` and `netlistsvg` in `wsl` for this

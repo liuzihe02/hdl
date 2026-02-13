@@ -28,17 +28,21 @@ Here the sample prompt used to condense documents:
 ```txt
 websites:
 
-visit all these pages first, and read them carefully.
+visit all these pages first, and read them carefully. They should be covering one whole chapter in ChipVerify.
 
 High Level Goals:
 I want a condensed markdown doc synthesizing the above information for this chapter, containing the core concepts, code, tables and diagrams.
-Try to keep the content originally and faithfully as produced (don't do too much summarization), but I do want to condense all the information into a coherent markdown document
+Try to keep the content originally and faithfully as produced (don't do too much summarization and skimp on explanations/details), but I do want to condense all the core information into a coherent markdown document. You need to use your judgement to balance this.
 Do prioritize concepts core to general HDL/FPGA and discard niche/non-industry-standard concepts
 
 Regarding formatting:
 No need to number sections, just use appropriate # headers.
-Tables and diagrams are helpful to illustrate/synthesize concepts (but use your judgement and don't overuse everywhere)
-Previously, you tend to create a quick reference section at the chapter end. However, sometimes you mix distinct concepts like arrays and params (I understand the chapter actually does cover arrays and params despite being distinct concepts) and include them all in the table. Where possible, try to create tables/concepts that cover a whole concept area rather than mix distinct concepts. Again use your judgement on this though.
+Tables/diagrams are helpful to illustrate/synthesize concepts (but use your judgement and don't overuse everywhere)
+Previously, you tend to create a quick reference section at the chapter end, this is fine but use them appropriately. However, sometimes you mix distinct concepts like arrays and params (I understand the chapter actually does cover arrays and params despite being distinct concepts) and include them all in the table. Where possible/appropriate, try to create tables/diagrams that cover a whole concept area rather than mix distinct concepts. Again use your judgement on this though.
+
+Regarding technicals:
+Where appropriate, do explicitly distinguish between simulation-only constructs (like initial, fork-join, and # delays) and synthesizable hardware constructs (like always @)
+Consider using inline or block code comments where it really helps to explain the code.
 ```
 
 ### Code Simple Examples

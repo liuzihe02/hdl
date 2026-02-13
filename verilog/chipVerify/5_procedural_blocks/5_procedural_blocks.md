@@ -1,105 +1,71 @@
-# Chip Verify Verilog Chapter 5: Procedural Blocks
+# Procedural Blocks
 
-**Procedural blocks** contain statements that execute sequentially (unlike concurrent module-level statements). Verilog has two main types: `initial` and `always`.
+Verilog statements are executed sequentially inside **procedural blocks**. There are two types: `initial` and `always`. All procedural blocks within a module run **concurrently** with each other from time 0, modelling the parallel nature of hardware.
 
-## Initial Block
+---
 
-The `initial` block executes **once** at the start of simulation (time 0) and is **NOT synthesizable**. Used exclusively for testbenches and simulation.
+## `initial` Block
+
+An `initial` block executes **once** starting at simulation time 0. It is **not synthesizable** and is used exclusively in testbenches for stimulus generation, variable initialization, and simulation control.
 
 ```verilog
-initial 
-    [single_statement]
+initial
+    a = 2'b10;           // single statement — no begin/end needed
 
 initial begin
-    [multiple_statements]
+    a = 2'b10;           // executes at t=0
+    #10 b = 8'h00;       // executes at t=10
 end
 ```
 
-### Timing Behavior
+**Key properties:**
 
-**Start:** Time 0 units  
-**End:** When all statements complete  
-**Execution:** Once per simulation
+- Executes only once, starting at time 0.
+- Multiple `initial` blocks in a module all start at time 0 and run in parallel.
+- The simulation ends when all `initial` blocks have completed (or `$finish` is called).
+- `$finish` in any block terminates the entire simulation immediately, killing all other active blocks.
 
 ```verilog
-module example;
-    reg [1:0] a, b;
-    
-    // Executes at time 0, completes at time 10
-    initial begin
-        a = 2'b10;      // Executes at time 0
-        #10 b = 2'b01;  // Executes at time 10
-    end
-endmodule
+// Three parallel initial blocks
+initial #20  $display("Block 1 done");   // finishes at t=20
+initial begin
+    #10 $display("Block 2 step 1");      // t=10
+    #40 $display("Block 2 step 2");      // t=50
+end
+initial #60  $finish;                    // simulation ends at t=60
 ```
 
-### Multiple Initial Blocks
+---
 
-- **Unlimited** number of initial blocks allowed per module
-- All start at time 0 and execute **in parallel**
-- Each runs independently until completion
+## `always` Block
 
-```verilog
-module multi_init;
-    initial begin
-        #20 $display("Block 1 done");  // Finishes at t=20
-    end
-    
-    initial begin
-        #10 $display("Block 2 done");  // Finishes at t=10
-        #40 $display("Block 2 really done");  // Finishes at t=50
-    end
-    
-    initial begin
-        #60 $finish;  // Ends simulation at t=60, killing all other blocks
-    end
-endmodule
-```
-
-**Important:** If one block calls `$finish`, simulation ends immediately, terminating all active blocks.
-
-### Use Cases
-
-| Use | Example |
-|-----|---------|
-| Initialize variables | `initial clk = 0;` |
-| Generate test stimulus | `initial begin #10 din = 8'hAA; end` |
-| Monitor signals | `initial $monitor("time=%0t data=%h", $time, data);` |
-| Control simulation | `initial #1000 $finish;` |
-
-**Synthesis:** Initial blocks are **NEVER synthesizable** - ignored by synthesis tools.
-
-## Always Block
-
-The `always` block is a **continuous process** that executes whenever signals in its sensitivity list change. It **IS synthesizable**.
-
-### Syntax
+An `always` block runs **continuously** throughout simulation, re-triggering whenever its **sensitivity list** event occurs. Unlike `initial`, the `always` block **can be synthesized** into hardware.
 
 ```verilog
-always @ (sensitivity_list)
+always @ (event)
     [statement]
 
-always @ (sensitivity_list) begin
-    [multiple_statements]
+always @ (event) begin
+    [multiple statements]
 end
 ```
 
 ### Sensitivity List
 
-The **sensitivity list** defines when the always block triggers. It contains signals whose changes activate the block.
+The sensitivity list (after `@`) defines **when** the block executes. It can contain signal names, edge specifiers, or `*` (all inputs).
 
 ```verilog
-// Triggers when a OR b changes
+// Trigger on any change of a or b (combinational)
 always @ (a or b) begin
-    out = a & b;
+    o <= ~((a & b) | (c ^ d));
 end
 
-// Triggers on positive edge of clk
+// Trigger on rising edge of clk (sequential)
 always @ (posedge clk) begin
     q <= d;
 end
 
-// Triggers on posedge clk OR negedge reset
+// Trigger on rising clk OR falling reset (sequential with async reset)
 always @ (posedge clk or negedge rstn) begin
     if (!rstn)
         q <= 0;
@@ -108,286 +74,201 @@ always @ (posedge clk or negedge rstn) begin
 end
 ```
 
-### Edge Specifiers
-
-| Keyword | Meaning | Usage |
-|---------|---------|-------|
-| `posedge` | Rising edge (0→1) | Clocks, synchronous logic |
-| `negedge` | Falling edge (1→0) | Resets, inverted clocks |
-
-### Empty Sensitivity List
-
-**Dangerous!** Without timing control, creates infinite zero-delay loop:
+> **Warning:** An `always` block with **no sensitivity list and no delay** creates a zero-delay infinite loop that hangs the simulation.
 
 ```verilog
-// BAD - simulation hangs!
-always 
-    clk = ~clk;  // Executes forever at time 0
-
-// GOOD - adds delay (for testbench only, not synthesizable)
-always #10 clk = ~clk;  // Toggle every 10 time units
+always clk = ~clk;       // HANGS — no timing control
+always #10 clk = ~clk;   // OK — clock toggles every 10 time units (but not synthesizable)
 ```
 
-**Rule:** Design code must always have a sensitivity list.
+### Synthesizable `always` Block Templates
 
-### Sequential Logic with Always
+| Template | Sensitivity List | Infers |
+|---|---|---|
+| Combinational logic | `@ (all_inputs)` or `@ (*)` | Combo gates |
+| Latch (usually unintended) | `@ (all_inputs)` with `if` but no `else` | Latch |
+| Flip-flop (sync reset) | `@ (posedge clk)` | D flip-flop |
+| Flip-flop (async reset) | `@ (posedge clk or negedge rstn)` | D flip-flop with async reset |
 
-Use for flip-flops, registers, and state machines.
+> **Important:** All signals assigned inside an `always` block must be declared as `reg`. Explicit `#` delays are not synthesizable — real design code always uses a sensitivity list.
+
+### Combinational Example
 
 ```verilog
-// D Flip-Flop with async reset
-module dff (
-    input      clk,
-    input      rstn,
-    input      d,
-    output reg q
-);
-    // on the rising edge of clock
+module combo (input a, b, c, d,
+              output reg o);
+
+    always @ (a or b or c or d) begin
+        o <= ~((a & b) | (c ^ d));
+    end
+endmodule
+```
+
+### Sequential Example — T Flip-Flop
+
+```verilog
+module tff (input       d, clk, rstn,
+            output reg  q);
+
     always @ (posedge clk or negedge rstn) begin
         if (!rstn)
-            q <= 0;          // Async reset
+            q <= 0;          // async reset: output cleared
+        else if (d)
+            q <= ~q;         // toggle on d=1
         else
-            q <= d;          // Capture data on clock edge
+            q <= q;          // hold
     end
 endmodule
 ```
 
-**Execution Flow (posedge clk):**
-1. Check reset condition
-2. If reset active → set output to default
-3. Else → perform sequential operation
+---
 
-**Execution Flow (negedge rstn):**
-1. Reset becomes active (1→0)
-2. Output forced to reset value
-3. Sequential operation suspended
+## Control Flow
 
-### Combinational Logic with Always
+Hardware behavior requires conditional statements and loops to control logic flow within procedural blocks.
 
-Use for combo logic (muxes, decoders, ALUs).
+### `if-else-if`
+
+Works like C. The `else` part is optional. Without explicit `begin-end`, a dangling `else` associates with the nearest preceding `if` that lacks one.
 
 ```verilog
-module combo (
-    input  a, b, c, d,
-    output reg o
-);
-    // All inputs in sensitivity list
-    always @ (a or b or c or d) begin
-        o = ~((a & b) | (c ^ d));
-    end
-endmodule
-
-// Verilog-2001 shorthand
-always @ (*) begin  // Auto-includes all RHS signals
-    o = ~((a & b) | (c ^ d));
-end
-```
-
-**Critical:** For combo logic, **ALL** inputs must be in sensitivity list to avoid synthesis/simulation mismatch.
-
-## Control Flow Statements
-
-### if-else-if
-
-```verilog
-// Single if
-if (condition)
-    statement;
-
-// if-else
-if (condition)
-    statement1;
+if (expression)
+    [statement]
+else if (expression)
+    [statement]
 else
-    statement2;
+    [statement]       // default / none-of-the-above
 
-// if-else-if ladder
-if (condition1)
-    statement1;
-else if (condition2)
-    statement2;
-else
-    statement3;  // default case
-
-// Multiple statements require begin-end
-if (condition) begin
-    statement1;
-    statement2;
+// For multiple statements, use begin-end
+if (expression) begin
+    [multiple statements]
 end else begin
-    statement3;
+    [multiple statements]
 end
 ```
 
-**Nested if Rules:**
-- `else` pairs with nearest unpaired `if`
-- Use `begin-end` to clarify pairing
-- Last `else` handles default case
+> **Synthesis note:** An `if` without a corresponding `else` inside a combinational `always` block infers a **latch**, because the previous value must be held.
 
-## Loops
+### Loops
 
-### forever Loop
+Loops are used inside procedural blocks (`initial` / `always`) for simulation and, in limited cases, for synthesizable logic.
 
-Executes continuously until simulation ends or `$finish` called.
+| Loop | Syntax | Behavior |
+|---|---|---|
+| `forever` | `forever [statement]` | Executes indefinitely. Must include a timing control or `$finish` to avoid hanging. |
+| `repeat` | `repeat(N) [statement]` | Executes exactly N times. If N is X or Z, treated as 0. |
+| `while` | `while(expr) [statement]` | Executes as long as expression is true. |
+| `for` | `for(init; cond; incr) [statement]` | Standard three-part loop (init, condition check, increment). |
 
 ```verilog
+// forever — commonly used for clock generation in testbenches
 initial begin
-    forever begin
-        #10 clk = ~clk;  // Clock generator
-    end
+    clk = 0;
+    forever #5 clk = ~clk;  // 10-unit period clock
 end
-```
 
-**Warning:** Without delay, creates infinite loop!
-
-### repeat Loop
-
-Executes fixed number of times.
-
-```verilog
+// repeat
 initial begin
     repeat(4) begin
         $display("Iteration");
     end
 end
-// Prints "Iteration" 4 times
-```
 
-**Note:** If count expression is X or Z, treated as 0 (no execution).
-
-### while Loop
-
-Executes while condition is true.
-
-```verilog
+// while
 integer i = 5;
-
 initial begin
     while (i > 0) begin
-        $display("i = %0d", i);
+        $display("Iteration#%0d", i);
         i = i - 1;
     end
 end
-// Prints: i=5, i=4, i=3, i=2, i=1
-```
 
-### for Loop
-
-Counter-based iteration.
-
-```verilog
-integer i;
-
+// for
 initial begin
     for (i = 0; i < 5; i = i + 1) begin
         $display("Loop #%0d", i);
     end
 end
-// Prints: Loop #0, Loop #1, ..., Loop #4
 ```
 
-**Three-step process:**
-1. Initialize counter
-2. Check condition
-3. Increment counter
+---
 
 ## Block Statements
 
-Group multiple statements into a single unit.
+Block statements group multiple statements into a single syntactic unit. There are two kinds: **sequential** and **parallel**.
 
-### Sequential Block (begin-end)
+### Sequential Blocks (`begin-end`)
 
-Statements execute **in order**, one after another. Delays are **cumulative**.
+Statements execute **one after another**. Delays are **relative** to the previous statement's execution time.
 
 ```verilog
 initial begin
-    #10 data = 8'hFE;   // Execute at t=10
-    #20 data = 8'h11;   // Execute at t=30 (10+20)
-    #15 data = 8'hAA;   // Execute at t=45 (30+15)
+    #10  data = 8'hfe;    // executes at t=10
+    #20  data = 8'h11;    // executes at t=30 (10 + 20)
 end
 ```
 
-**Timeline:**
-```
-t=0   : Block starts
-t=10  : data = 0xFE
-t=30  : data = 0x11
-t=45  : data = 0xAA
-```
+### Parallel Blocks (`fork-join`)
 
-### Parallel Block (fork-join)
-
-Statements execute **concurrently**. Delays are **relative to block start**.
+Statements launch **concurrently** at the moment the `fork` is entered. Delays are all **relative to the fork entry time**, not to each other. The `join` waits until **all** parallel statements complete.
 
 ```verilog
 initial begin
-    #10 data = 8'hFE;   // Execute at t=10
+    #10 data = 8'hfe;      // t=10
     fork
-        #20 data = 8'h11;   // Execute at t=30 (10+20 from start)
-        #10 data = 8'h00;   // Execute at t=20 (10+10 from start)
+        #20 data = 8'h11;  // t=30 (10+20)
+        #10 data = 8'h00;  // t=20 (10+10) — executes first
     join
 end
 ```
 
-**Timeline:**
-```
-t=0   : initial block starts
-t=10  : data = 0xFE, fork block starts
-t=20  : data = 0x00 (first fork statement completes)
-t=30  : data = 0x11 (second fork statement completes)
-```
-
-### Nested Blocks
+You can **nest** `begin-end` inside `fork-join`. The nested sequential block is launched as one parallel branch:
 
 ```verilog
 initial begin
-    #10 data = 8'hFE;
+    #10 data = 8'hfe;           // t=10
     fork
-        #10 data = 8'h11;        // t=20
-        begin                     // Sequential inside parallel
-            #20 data = 8'h00;    // t=30
-            #30 data = 8'hAA;    // t=60 (30+30)
+        #10 data = 8'h11;       // t=20
+        begin
+            #20 data = 8'h00;   // t=30
+            #30 data = 8'haa;   // t=60
         end
     join
 end
 ```
 
-### Named Blocks
+### Naming Blocks
 
-Blocks can be named for reference (e.g., in `disable` statements).
+Both block types can be named with `: name` after `begin` or `fork`. Named blocks can be referenced in `disable` statements to exit them early.
 
 ```verilog
-begin : seq_block
-    // Statements
+begin : my_seq_block
+    [statements]
 end
 
-fork : parallel_block
-    // Statements
+fork : my_par_block
+    [statements]
 join
 ```
 
-## Key Differences Summary
+---
 
-| Feature | `initial` | `always` |
-|---------|-----------|----------|
-| Execution | Once at t=0 | Continuous (triggered by sensitivity) |
-| Synthesizable | ✗ No | ✓ Yes |
-| Use Case | Testbench, initialization | Design logic (combo/sequential) |
-| Sensitivity List | Not allowed | Required for synthesis |
-| Typical Usage | Stimulus, monitoring | Flip-flops, combinational logic |
+## Quick Reference: `initial` vs `always`
 
-## Common Pitfalls
+| Property | `initial` | `always` |
+|---|---|---|
+| Execution | Once, starting at t=0 | Repeatedly, on each sensitivity event |
+| Synthesizable | No | Yes (with proper sensitivity list) |
+| Typical use | Testbench stimulus, initialization | RTL design (combinational & sequential logic) |
+| Sensitivity list | None | Required for synthesis |
+| Multiple per module | Yes, all run in parallel | Yes, all run in parallel |
 
-```verilog
-// Missing signals in sensitivity list
-always @ (a) begin
-    out = a & b;  // b missing! Simulation/synthesis mismatch
-end
+## Quick Reference: `begin-end` vs `fork-join`
 
-// Incomplete if without else (unintended latch)
-always @ (*) begin
-    if (sel)
-        out = a;  // What if sel=0? LATCH!
-end
-
-// Using initial for hardware logic
-initial q = 1'b0;  // Not synthesizable!
-```
+| Property | `begin-end` (Sequential) | `fork-join` (Parallel) |
+|---|---|---|
+| Execution order | Statements execute in order | Statements launch simultaneously |
+| Delay behavior | Relative to previous statement | Relative to fork entry time |
+| Completion | After last statement finishes | After **all** branches finish |
+| Can be named | Yes (`: name`) | Yes (`: name`) |
+| Nesting | Can nest inside `fork-join` | Can nest inside `begin-end` |

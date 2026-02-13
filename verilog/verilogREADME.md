@@ -21,86 +21,25 @@ These are extra resources that weren't used but are here for reference
   - downloaded locally
 - Verilog Quick Reference
 
-## ChipVerify Path
+## ChipVerify Prompt
 
-I'll fetch the tutorial site to see the full chapter structure.Based on your course requirements (FPGA experiment, FSM design, sequential/combinational circuits) and 10-15 hour timeframe, here's the breakdown:
+Here the sample prompt used to condense documents:
 
-### **TIER 1: ABSOLUTELY CORE (6-8 hours)**
-*Essential for course and FPGA lab*
+```txt
+websites:
 
-**Getting Started (1-2h)**
-- Introduction, Hello World, Quick Review
+visit all these pages first, and read them carefully.
 
-**Basic Syntax & Structure (1h)**
-- Verilog Syntax, module, Ports, Module Instantiations
+High Level Goals:
+I want a condensed markdown doc synthesizing the above information for this chapter, containing the core concepts, code, tables and diagrams.
+Try to keep the content originally and faithfully as produced (don't do too much summarization), but I do want to condense all the information into a coherent markdown document
+Do prioritize concepts core to general HDL/FPGA and discard niche/non-industry-standard concepts
 
-**Data Types & Operators (1h)**
-- Data Types, scalar/vector, Net Types, Operators, Concatenation
-
-**Procedural Blocks (1h)**
-- initial block, always block, Control Blocks
-
-**Assignments (1h)** ⚠️ **CRITICAL**
-- assign statement, **Blocking & Non-Blocking** (most common mistake!)
-
-**Combinational & Sequential Logic (1h)**
-- Combinational Logic (assign & always)
-- Sequential Logic (always)
-
-**Conditional Statements (0.5h)**
-- if-else-if, case statement
-
-**State Machines (1h)** ⚠️ **HIGH PRIORITY**
-- Verilog FSM, Sequence Detector
-
-**Testbench & Simulation (1h)**
-- Testbench, Simulation, Display Tasks
-
----
-
-### **TIER 2: HIGHLY RELEVANT (3-4 hours)**
-*Important for lab and understanding*
-
-**Flip-Flops & Latches (0.5h)**
-- D Latch, D Flip-Flop Async Reset, T/JK Flip-Flops
-
-**Basic Digital Circuits (0.5h)**
-- Full Adder, Mux, Priority Encoder
-
-**Counters (0.5h)**
-- 4-bit counter, Mod-N counter
-
-**Arrays & Parameters (0.5h)**
-- Arrays/Memories, Parameters (for parameterized designs)
-
-**Clock & Timing (0.5h)**
-- Clock Generator, Timescale
-
-**Loops & Generate (0.5h)**
-- for Loop, generate block
-
----
-
-### **TIER 3: USEFUL BUT OPTIONAL (1-2 hours)**
-*If you have extra time*
-
-- Shift Registers
-- Memory Elements
-- Gate Level Modeling
-- Examples & Practice
-
----
-
-### **TIER 4: SKIP FOR NOW**
-*Too advanced or covered in lectures*
-
-- Timing & Delays (detailed)
-- Advanced Testbench Features (VCD, File IO)
-- Compiler Directives
-- Advanced Topics (UDP, Specify Block, Strength)
-- Synthesis (you'll cover this in lectures)
-- SDF/Timing Analysis
-- Interview Questions
+Regarding formatting:
+No need to number sections, just use appropriate # headers.
+Tables and diagrams are helpful to illustrate/synthesize concepts (but use your judgement and don't overuse everywhere)
+Previously, you tend to create a quick reference section at the chapter end. However, sometimes you mix distinct concepts like arrays and params (I understand the chapter actually does cover arrays and params despite being distinct concepts) and include them all in the table. Where possible, try to create tables/concepts that cover a whole concept area rather than mix distinct concepts. Again use your judgement on this though.
+```
 
 ### Code Simple Examples
 

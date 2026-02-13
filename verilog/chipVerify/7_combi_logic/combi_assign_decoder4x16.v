@@ -10,12 +10,13 @@
 // =============================================================================
 
 module dec_4x16 (
-    input              en,
-    input      [3:0]   in,
-    output     [15:0]  out
+    input         en,
+    input  [ 3:0] in,
+    output [15:0] out
 );
 
-    // Shift a 1 into the position indicated by 'in'; zero everything if !en
-    assign out = en ? (1 << in) : 16'b0;
+  // Shift a 1 into the position indicated by 'in'; zero everything if !en
+  // verilog inteprets wire vectors as unsigned integers in arithmetic/shift operators
+  assign out = en ? (1 << in) : 16'b0;
 
 endmodule

@@ -8,7 +8,7 @@
 |------|----------|--------|----------|---------------|-----------|
 | **Procedural** | `=` or `<=` | Variables (reg) | initial/always/task/function | Depends on context | Sequential |
 | **Continuous** | `assign` | Nets (wire) | Outside procedural blocks | ✓ Yes | Concurrent |
-| **Procedural Continuous** | `assign`/`force` | Variables or nets | Inside procedural blocks | ✗ No | Override |
+
 
 ## Legal LHS Values
 
@@ -18,7 +18,6 @@ What can appear on the left-hand side varies by assignment type:
 |----------------|-------------|
 | **Procedural** | reg variables (scalar/vector), bit/part-select of reg, memory word, concatenation **(no nets)** |
 | **Continuous** | wire nets (scalar/vector), bit/part-select of wire, concatenation of nets **(no variables)** |
-| **Procedural Continuous** | Any net or variable, bit/part-select of nets |
 
 **Golden Rule:** RHS can be any expression, but LHS restrictions depend on assignment type.
 

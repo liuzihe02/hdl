@@ -43,6 +43,7 @@ Previously, you tend to create a quick reference section at the chapter end, thi
 Regarding technicals:
 Where appropriate, do explicitly distinguish between simulation-only constructs (like initial, fork-join, and # delays) and synthesizable hardware constructs (like always @)
 Consider using inline or block code comments where it really helps to explain the code.
+You can consider having a pitfalls/common mistakes/guidelines/tips section, but use your judgement on whether it really helps with pedagogy when information is too scattered or it serves more to just repeating information
 ```
 
 ### Code Simple Examples

@@ -1,4 +1,4 @@
-# Verilog Loops & Generate
+# Chip Verify Chapter 12 Verilog Loops & Generate
 
 ## `for` Loop
 

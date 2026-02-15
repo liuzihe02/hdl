@@ -19,11 +19,11 @@
   .splitjoinBody {
     fill:#000;
   }</style>
-  <g s:type="add" transform="translate(77,29.5)" s:width="25" s:height="25" id="cell_$add$combi_always_halfadder.v:20$2">
+  <g s:type="add" transform="translate(77,29.5)" s:width="25" s:height="25" id="cell_$add$./halfadder_always.v:20$2">
     <s:alias val="$add"/>
-    <circle r="12.5" cx="12.5" cy="12.5" class="cell_$add$combi_always_halfadder.v:20$2"/>
-    <line x1="7.5" x2="17.5" y1="12.5" y2="12.5" class="cell_$add$combi_always_halfadder.v:20$2"/>
-    <line x1="12.5" x2="12.5" y1="7.5" y2="17.5" class="cell_$add$combi_always_halfadder.v:20$2"/>
+    <circle r="12.5" cx="12.5" cy="12.5" class="cell_$add$./halfadder_always.v:20$2"/>
+    <line x1="7.5" x2="17.5" y1="12.5" y2="12.5" class="cell_$add$./halfadder_always.v:20$2"/>
+    <line x1="12.5" x2="12.5" y1="7.5" y2="17.5" class="cell_$add$./halfadder_always.v:20$2"/>
     <g s:x="3" s:y="5" s:pid="A"/>
     <g s:x="3" s:y="20" s:pid="B"/>
     <g s:x="25" s:y="12.5" s:pid="Y"/>

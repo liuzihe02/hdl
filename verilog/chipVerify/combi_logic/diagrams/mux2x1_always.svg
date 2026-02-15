@@ -19,11 +19,11 @@
   .splitjoinBody {
     fill:#000;
   }</style>
-  <g s:type="mux" transform="translate(77,22)" s:width="20" s:height="40" id="cell_$ternary$combi_assign_mux2x1.v:17$1">
+  <g s:type="mux" transform="translate(77,22)" s:width="20" s:height="40" id="cell_$ternary$./mux2x1_always.v:19$2">
     <s:alias val="$pmux"/>
     <s:alias val="$mux"/>
     <s:alias val="$_MUX_"/>
-    <path d="M0,0 L20,10 L20,30 L0,40 Z" class="cell_$ternary$combi_assign_mux2x1.v:17$1"/>
+    <path d="M0,0 L20,10 L20,30 L0,40 Z" class="cell_$ternary$./mux2x1_always.v:19$2"/>
     <g s:x="0" s:y="10" s:pid="A"/>
     <g s:x="0" s:y="30" s:pid="B"/>
     <g s:x="10" s:y="35" s:pid="S"/>

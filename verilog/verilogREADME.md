@@ -46,25 +46,32 @@ Consider using inline or block code comments where it really helps to explain th
 You can consider having a pitfalls/common mistakes/guidelines/tips section, but use your judgement on whether it really helps with pedagogy when information is too scattered or it serves more to just repeating information
 ```
 
-### Code Simple Examples
+### Core Circuits
 
-**Combinational**
+#### Combinational Logic
 
 - Half adder, full adder, ripple adder → foundation of all arithmetic
 - Mux (2:1, 4:1) → LUTs are literally muxes, so this IS the FPGA
 - Encoders / Decoders / Priority Encoders — essential combinational logic for address decoding, arbitration.
 
-**Sequential**
+#### Sequential Logic
 
-- D flip-flop (sync reset, async reset) → the single most important sequential element
-- Counters (binary, mod-N) → backbone of timing and control
-- Shift register → serial-to-parallel, LFSRs, data movement
+- D flip-flop (sync reset, async reset, with gate) → the single most important sequential element
+  - MUX and DFF
+- Counters (4 bit binary, decade counter mod-N) → backbone of timing and control
+- 4bit Shift register → serial-to-parallel, LFSRs, data movement
+- Left/Right rotator
 
-**Control**
+#### Finite State Machines
 
-- FSM (Moore and Mealy) → the glue that ties datapath to control; if you can write an FSM cleanly you can build almost anything
+- Serial receiver
+- Sequence recognition
 
-That's roughly 12 circuit types. Everything else in those lists is either a variation (JK/T flip-flops are derived from D), a composition (ALU = adders + mux + logic), or a niche application (FIFO, debounce, edge detector).
+#### Others
+
+- Synchronous FIFO
+- Single Port RAM
+- Debounce Circuit
 
 ### Chip Design Diagrams
 

@@ -1,4 +1,4 @@
-# Chip Verify Verilog Chapter 6: Assignments
+# ChipVerify Verilog Chapter 6: Assignments
 
 **Assignments** place values onto nets and variables. Verilog has various assignment types (continuous, procedural blocking and procedural non-blocking)
 

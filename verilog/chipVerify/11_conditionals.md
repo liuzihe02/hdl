@@ -1,4 +1,4 @@
-# Verilog Conditional Statements
+# ChipVerify Chapter 11: Verilog Conditional Statements
 
 Conditional statements control the flow of execution based on conditions. Verilog provides three main mechanisms: the **conditional (ternary) operator**, the **if-else-if** statement, and the **case** statement.
 

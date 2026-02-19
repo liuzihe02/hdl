@@ -33,7 +33,7 @@
  * Use cases: Registers, pipeline stages, state storage in FSMs
  */
 
-module dff (
+module d_ff (
     input clk,
     rstn,
     d,

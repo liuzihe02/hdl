@@ -81,6 +81,7 @@ endmodule
 - Must be enclosed within `module` and `endmodule` keywords
 - Ports declared in port list cannot be redeclared in module body
 - All declarations, dataflow statements, functions, tasks, and sub-module instances must be inside module/endmodule
+- If you want to instantiate a module (reusing an external module), these *cannot* be within a procedural block!
 
 ### Example: D Flip-Flop
 
@@ -254,6 +255,7 @@ endmodule
 
 - Port names must be unique within a module
 - Cannot declare the same port name multiple times
+- the last port can't have a comma (tripped me up many times)
 
 ### Signed Ports
 

@@ -40,38 +40,50 @@ Each nibble then feeds into the 7-segment decoder truth table from before.
 */
 module ep1_q4 (
     //decimal 0 to 15 in binary
-    input wire [3:0] a,
+    input  wire [3:0] a,
     //left digit 7 bits
-    output reg [6:0] dl,
+    output wire [6:0] dl,
     //right digit 7 bits
-    output reg [6:0] dr,
+    output wire [6:0] dr
 );
-reg [7:0] f;
-always @(*) begin
+  //declare reg to be used inside procedural combi block
+  reg [7:0] f;
+  always @(*) begin
     begin
-        case (a)
-            4'b0000: f <= {4'b0000, 4'b0000}; // 0  → 0, 0
-            4'b0001: f <= {4'b0000, 4'b0001}; // 1  → 0, 1
-            4'b0010: f <= {4'b0000, 4'b0010}; // 2  → 0, 2
-            4'b0011: f <= {4'b0000, 4'b0011}; // 3  → 0, 3
-            4'b0100: f <= {4'b0000, 4'b0100}; // 4  → 0, 4
-            4'b0101: f <= {4'b0000, 4'b0101}; // 5  → 0, 5
-            4'b0110: f <= {4'b0000, 4'b0110}; // 6  → 0, 6
-            4'b0111: f <= {4'b0000, 4'b0111}; // 7  → 0, 7
-            4'b1000: f <= {4'b0000, 4'b1000}; // 8  → 0, 8
-            4'b1001: f <= {4'b0000, 4'b1001}; // 9  → 0, 9
-            4'b1010: f <= {4'b0001, 4'b0000}; // 10 → 1, 0
-            4'b1011: f <= {4'b0001, 4'b0001}; // 11 → 1, 1
-            4'b1100: f <= {4'b0001, 4'b0010}; // 12 → 1, 2
-            4'b1101: f <= {4'b0001, 4'b0011}; // 13 → 1, 3
-            4'b1110: f <= {4'b0001, 4'b0100}; // 14 → 1, 4
-            4'b1111: f <= {4'b0001, 4'b0101}; // 15 → 1, 5
-            default: f <= 8'b0;
-        endcase
-        //input to my bcd 7 seg decoders
-        dr<=bcd7seg(f[3:0]);
-        dl<=bcd7seg(f[7:4]);
+      case (a)
+        //always@* needs blocking
+        4'b0000: f = {4'b0000, 4'b0000};
+        4'b0001: f = {4'b0000, 4'b0001};
+        4'b0010: f = {4'b0000, 4'b0010};
+        4'b0011: f = {4'b0000, 4'b0011};
+        4'b0100: f = {4'b0000, 4'b0100};
+        4'b0101: f = {4'b0000, 4'b0101};
+        4'b0110: f = {4'b0000, 4'b0110};
+        4'b0111: f = {4'b0000, 4'b0111};
+        4'b1000: f = {4'b0000, 4'b1000};
+        4'b1001: f = {4'b0000, 4'b1001};
+        4'b1010: f = {4'b0001, 4'b0000};
+        4'b1011: f = {4'b0001, 4'b0001};
+        4'b1100: f = {4'b0001, 4'b0010};
+        4'b1101: f = {4'b0001, 4'b0011};
+        4'b1110: f = {4'b0001, 4'b0100};
+        4'b1111: f = {4'b0001, 4'b0101};
+        default: f = 8'b0;
+      endcase
     end
   end
+
+  // Instantiate 7seg decoders (these are modules, not functions!)
+  // cannot call them inline
+  // will modify dl in place
+  // cannot instantiate within procedural blocks
+  bcd7seg seg_left (
+      .bcd (f[7:4]),
+      .leds(dl)
+  );
+  bcd7seg seg_right (
+      .bcd (f[3:0]),
+      .leds(dr)
+  );
 
 endmodule

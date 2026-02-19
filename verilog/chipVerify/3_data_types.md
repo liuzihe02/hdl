@@ -33,6 +33,17 @@ wire [3:0]  bus;        // 4-bit vector (bus)
 assign bus = a & b | c;
 ```
 
+Wires can be driven by:
+- `assign` statements (continuous assignment)
+- Gate/module output ports (structural connections)
+
+```verilog
+assign dl = some_expr;          // continuous assignment drives the wire
+bcd7seg seg (.leds(dl), ...);   // module output port drives the wire
+```
+
+A `wire` **cannot** be driven from inside an `always` or `initial` block — use `reg` for that.
+
 - Most common net type: `wire` (other net types like `tri` or `wand` are rarely used)
 - **Cannot redeclare** — duplicate net names cause a compile error
 - Default value: `z` (high-impedance)
@@ -46,15 +57,36 @@ reg         q;          // 1-bit register
 reg [3:0]   data;       // 4-bit register
 ```
 
+`reg` can only be driven from **inside** procedural blocks:
+
+```verilog
+always @(*) begin
+  f = a & b;    // reg driven from always block (combinational)
+end
+
+initial begin
+  q = 1'b0;    // reg driven from initial block (simulation only)
+end
+```
+
+A `reg` **cannot** be driven by a module output port or `assign` — use `wire` for that.
+
 - `reg` does NOT always infer a flip-flop — it can represent combinational logic too
 - Default value: `x` (unknown)
+
+> **Common mistake:** Trying to use `reg` as a module output connection.
+> ```verilog
+> reg [6:0] dl;
+> bcd7seg seg (.leds(dl)); // ILLEGAL — module output must drive a wire
+> ```
+> The fix is to declare `dl` as `wire`.
 
 ### Quick Reference: `wire` vs `reg`
 
 | Property            | `wire`                     | `reg`                         |
 |---------------------|----------------------------|-------------------------------|
 | Represents          | Physical connection         | Storage element (abstract)    |
-| Driven by           | `assign` / gate output      | `always` / `initial` blocks   |
+| Driven by           | `assign` / gate/module output      | inside `always` / `initial` procedural blocks   |
 | Retains value?      | No (reflects driver)        | Yes (between assignments)     |
 | Default value       | `z`                         | `x`                           |
 | Synthesizes to      | Wire                        | FF, latch, or combinational   |

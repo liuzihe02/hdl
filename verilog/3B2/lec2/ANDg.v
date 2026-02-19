@@ -1,6 +1,7 @@
 module ANDg (
-	input  wire x1, x2,
-	output wire f
+    input  wire x1,
+    x2,
+    output wire f
 );
-	assign f = x1 & x2;
-endmodule 
+  assign f = x1 & x2;
+endmodule

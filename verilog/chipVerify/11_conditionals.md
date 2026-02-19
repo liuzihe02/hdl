@@ -144,6 +144,7 @@ endcase
 - If no item matches and no `default` is provided, **nothing executes** (and in combinational blocks, this can infer latches — same issue as `if` without `else`).
 - Case statements can be **nested**.
 - Multiple case items can share a single action by comma-separating them.
+- If you can't implement a function/mapping using simple Boolean gates, then consider using `case`!
 
 ### Example: 4-to-1 Multiplexer
 

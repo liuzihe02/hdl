@@ -76,3 +76,34 @@ You can consider having a pitfalls/common mistakes/guidelines/tips section, but 
 ### Chip Design Diagrams
 
 We'll be using `yosys` and `netlistsvg` in `wsl` for this
+
+## VSCode Settings
+
+VSCode settings:
+```json
+  //HDL stuff
+  "[verilog]": {
+    "editor.defaultFormatter": "mshr-h.veriloghdl",
+    "editor.formatOnSave": true,
+  },
+  "[systemverilog]": {
+    "editor.defaultFormatter": "mshr-h.veriloghdl",
+    "editor.formatOnSave": true,
+  },
+  // Configure the formatter for verilog
+  "verilog.formatting.verilogHDL.formatter": "verible-verilog-format",
+  //configure verilog linting
+  "verilog.linting.linter": "verible-verilog-lint",
+```
+
+### Verible
+
+We use verible to format our verilog code
+
+> Note that verible refuses to format code with syntax errors! So sometimes when you save nothing happens
+
+| Tool | Does what |
+|------|-----------|
+| `verible-verilog-syntax` | Parses file — is it valid Verilog? |
+| `verible-verilog-lint` | Static analysis — is it *good* Verilog? (wrong `<=`, unused vars, etc.) |
+| `verible-verilog-format` | Reformats style/indentation. **Requires clean syntax to run.** |

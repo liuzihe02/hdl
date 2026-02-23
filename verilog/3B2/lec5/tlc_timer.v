@@ -1,3 +1,7 @@
+`include "counter.v"
+`include "bcd7seg.v"
+`include "light.v"
+
 // --- top-level module ---
 module tlc_timer (
     input  wire       CLOCK_50,
@@ -169,78 +173,4 @@ module FSM (
 
 endmodule
 
-// --- counter module ---
-module counter #(
-    parameter integer n = 4,  // 4 bit for (0 to 9)
-    parameter integer k = 15  // set start_time
-) (
-    input  wire    clock,
-    reset,
-    enable,
-    load,
-    input  wire [n-1:0] start_time,
-    output reg  [n-1:0] count,
-    output wire    rollover
-);
-
-  assign rollover = (count == 0);
-
-  always @(posedge clock or negedge reset) begin
-    if (!reset) begin
-      count <= start_time;  // reset timer to start_time
-    end else if (load) begin
-      count <= start_time;  /* load next state time whenever the
-                                           state changes */
-    end else if (enable) begin
-      if (count != 0) count <= count - 1'b1;
-      else count <= k - 1;
-    end
-  end
-
-endmodule
-
-// --- bcd7seg module ---
-module bcd7seg (
-    input  wire [3:0] BCD,    // 4-bit BCD input
-    input  wire [1:0] state,  // 2-bit state input
-    output reg  [6:0] HEX     // 7-bit output (0 to 6 range)
-);
-
-  always @(*) begin
-    // High priority: check state first
-    if (state == 2'b00) begin
-      HEX = 7'b0111111;  // "stand-by" when G
-    end else begin
-      case (BCD)
-        4'b0000: HEX = 7'b1000000;  // 0
-        4'b0001: HEX = 7'b1111001;  // 1
-        4'b0010: HEX = 7'b0100100;  // 2
-        4'b0011: HEX = 7'b0110000;  // 3
-        4'b0100: HEX = 7'b0011001;  // 4
-        4'b0101: HEX = 7'b0010010;  // 5
-        4'b0110: HEX = 7'b0000010;  // 6
-        4'b0111: HEX = 7'b1111000;  // 7
-        4'b1000: HEX = 7'b0000000;  // 8
-        4'b1001: HEX = 7'b0010000;  // 9
-        default: HEX = 7'b1111111;
-      endcase
-    end
-  end
-
-endmodule
-
-// --- light module ---
-module light (
-    input  wire    status,
-    input  wire [1:0]  state,
-    output wire [5:0]  LED
-);
-
-  assign LED[5] = status;  // request status (WAIT)
-  assign LED[4:0] = (state == 2'b00) ? 5'b10001 :  // G
-      (state == 2'b01) ? 5'b10010 :  // Y
-      (state == 2'b10) ? 5'b01100 :  // R
-      5'b10001;
-
-endmodule
 

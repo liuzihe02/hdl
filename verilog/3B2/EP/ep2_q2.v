@@ -61,14 +61,18 @@ module ep2_q2 (
   assign tick = (tick_counter == 26'd49_999_999);
 
   always @(posedge CLOCK_50) begin
+    //reset mini tick counter
     if (tick) tick_counter <= 26'd0;
-    else tick_counter <= tick_counter + 26'd1;
+    //increment1
+    else
+      tick_counter <= tick_counter + 26'd1;
   end
 
   // --- Small counter: 4-bit BCD counter (0-9), increments once/sec ---
   reg [3:0] bcd = 0;
 
   always @(posedge CLOCK_50) begin
+    //increment display digit
     if (tick) begin
       if (bcd == 4'd9) bcd <= 4'd0;
       else bcd <= bcd + 4'd1;

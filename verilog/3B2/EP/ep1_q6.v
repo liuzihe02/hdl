@@ -9,7 +9,6 @@ module ep1_q6 (
       // Reset to state 1 (000)
       count <= 3'b000;
     end else begin
-      // Compute next state using if-then sequential logic
       case (count)
         3'b000:  count <= 3'b001;  // State 1 → State 2
         3'b001:  count <= 3'b011;  // State 2 → State 3
